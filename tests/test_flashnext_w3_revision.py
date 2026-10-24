@@ -131,3 +131,12 @@ def test_the_shipped_alias_names_image_files_of_the_new_revision(lf):
     (sha, spec), = lf.COMMON['image_4bit_native']['fnexec_manifest_alias'].items()
     # the plan files in the rc3 image are named after the weights commit (71faf406); later card-only commits reuse them
     assert spec['suffix'] == 'w3a8-71faf406' and len(spec['files']) == 4 and len(sha) == 64
+
+
+@pytest.mark.parametrize('mode', ['decode', '4bit'])
+def test_ipc_legacy_not_forced_but_caller_env_wins(lf, monkeypatch, tmp_path, capsys, mode):
+    # issue 27: a forced HSA_ENABLE_IPC_MODE_LEGACY=1 broke RCCL init on in-tree amdgpu hosts
+    monkeypatch.delenv('HSA_ENABLE_IPC_MODE_LEGACY', raising=False)
+    assert 'HSA_ENABLE_IPC_MODE_LEGACY' not in dry(lf, monkeypatch, tmp_path, capsys, mode=mode)
+    monkeypatch.setenv('HSA_ENABLE_IPC_MODE_LEGACY', '1')
+    assert '-e HSA_ENABLE_IPC_MODE_LEGACY=1' in dry(lf, monkeypatch, tmp_path, capsys, mode=mode)

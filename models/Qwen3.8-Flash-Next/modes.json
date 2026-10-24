@@ -258,7 +258,6 @@
       "source_run": "official decode/concurrency block, 10 Oct 2026 02:29-03:05 UTC",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
         "PAITON_FN_A4_SAMPLED": "1",
@@ -399,7 +398,6 @@
       "source_run": "official prefill block, 10 Oct 2026 03:24-03:38 UTC",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
         "PAITON_FN_A4_SAMPLED": "1",
@@ -534,7 +532,6 @@
       "source_run": "decode rows identical to the official decode block (the exact-prefill-path decode server start was tested, not benchmarked)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
         "PAITON_FN_A4_SAMPLED": "1",
@@ -672,7 +669,6 @@
       "source_run": "exact-prefill-path prefill block, 10 Oct 2026 08:15-08:32 UTC",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
         "PAITON_FN_A4_SAMPLED": "1",
@@ -805,7 +801,6 @@
       "source_run": "route-1 decode benchmark profile (development stack)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -987,7 +982,6 @@
       "source_run": "copy of --mode 4bit (r4.1: tier 21.4 + rotary trim, launcher efb34c9) with MTP off; native worker (DESIGN 4.1, 5)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -1164,7 +1158,6 @@
       "source_run": "copy of --mode 4bit-native with --mode 4bit's MTP spec config (K 3) (16 Oct; executor mode name 4bit, kv-spec 189ac6e9); KV profiles from 16-17 Oct; PAITON_FN_PF_MIXED_MTP=1 from 17 Oct (measured on lib 3a616b29: n=8 554.7 vs 539.7 / 541.8, n=4 453.7 vs 444.5 / 444.2, MIXED steps -24 % GPU, decode / TTFT / prefill equal, lone tokens bitwise, batched in class); MALL_PF per bucket d1-2:mlp:4,d3-8:win:4 from 16 Oct (measured on lib 0b6a61f1: n=4 +4.5 beyond the A-A spread, nothing worse, identical tokens; plain win:4 lost decode -1.8 %); KV_LEASE=on + MALL_PF=mlp:4 by default from 16 Oct (measured on lib c96e2190: decode +13.0 %, n=8 +5.8 %, n=4 +5.7 %, TTFT 68 vs 73 ms, identical tokens, 15-min soak clean; needs a head4 lib)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -1385,7 +1378,6 @@
       "source_run": "copy of --mode decode (3-bit, MTP 3, 98,304 window, 8 seqs) through the native worker (16 Oct); executor mode name 3bit; env aligned with the gated 4-bit native config: moe-grouped-r1 capsule, host pools auto (GTT pools = HSA_USERPTR_FOR_PAGED_MEM=0 when the GTT holds the ~25.6 GiB/rank host PLE, else user-pointer pools), ROPE_TRIM=1, SUBCHUNK=4",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
         "PAITON_FN_A4_SAMPLED": "1",
@@ -1564,7 +1556,6 @@
       "source_run": "copy of --mode 4bit-native with a 262,144-token window and 5.0 GiB KV per GPU (16 Oct)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -1740,7 +1731,6 @@
       "source_run": "copy of --mode 4bit-native with a 200,000-token window and 1.75 GiB KV per GPU (16 Oct)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -1914,7 +1904,6 @@
       "source_run": "copy of --mode 4bit-native with the align prefix-caching recipe (16 Oct; replay bitwise incl. 21 hit rows)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -2112,7 +2101,6 @@
       "source_run": "copy of --mode 4bit-cache-native with --mode 4bit's MTP spec config (K 3) (16 Oct: MTP 3 + align on the native worker; executor mode name 4bit-cache-mtp-native: manifest / kv files not yet staged)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -2325,7 +2313,6 @@
       "source_run": "copy of --mode 4bit-long-native with the align prefix-caching recipe (16 Oct; spec 5a4eb437 is window-independent, kv-meta derived for KV 5.0 GiB: 369 blocks)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -2528,7 +2515,6 @@
       "source_run": "route-1 prefill benchmark profile (development stack)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -2679,7 +2665,6 @@
       "source_run": "route-1 cache-mode profile (kv25 decode split, lease off; RAM-tier gates 12 Oct, development stack)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -2865,7 +2850,6 @@
       "source_run": "ROUTE1 kvt-p1f, 13 Oct 2026 (released image 5e4b24ad, launcher a985fa5 + cap 0.925)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -3031,7 +3015,6 @@
       "source_run": "development torch reference for --mode 4bit-long-cache-native: --mode 4bit-long (MTP 3, KV 3.5 GiB) + the align prefix-caching recipe and PAITON_FN_KV_LEASE=off as in --mode 4bit-cache (16 Oct; not measured)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -3186,7 +3169,6 @@
       "source_run": "ROUTE1 kvt-p2f, 13 Oct 2026 (released image 5e4b24ad, launcher a985fa5 + cap 0.925)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -3341,7 +3323,6 @@
       "source_run": "WSC 16 Oct proposal: copy of --mode 4bit-cache-native for the W3A8 container (WS-A 3BIT-PREP option (a): 4-bit attention contract, fp8 QSA KV; experts VRAM-resident, no tier; PAITON_FN_TAIL_BYPASS=1; KV 5.5 GiB; kv_pool_tokens scaled from the 4-bit mode, not measured)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -3521,7 +3502,6 @@
       "source_run": "OC6 18 Oct proposal: 3bit-long-native + align prefix caching (derived spec 5a4eb437, 405 blocks at 5.5 GiB; PREDICTED, needs a WS-C recording)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -3699,7 +3679,6 @@
       "source_run": "copy of --mode 4bit-cache-mtp-native (MTP 3 + align, served gate 18 Oct at 98K) at the 262,144-token window (23 Oct; spec dae77a30 is window-independent, kv-meta derived for KV 2.5 GiB: 170 blocks), RAM tier as 4bit-long-cache-native ; rc2 24 Oct: served gates g5 (tier off) / g9 (tier on, KV tier overlay e2377cb)",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "HSA_USERPTR_FOR_PAGED_MEM": "0",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
@@ -3929,7 +3908,6 @@
       "source_run": "copy of --mode 3bit-mtp-native at the 262,144-token window with the align prefix-caching recipe (24 Oct; spec dae77a30, kv-meta derived for KV 4.5 GiB: 306 blocks), RAM tier as 3bit-long-cache-native",
       "env": {
         "GPU_MAX_HW_QUEUES": "2",
-        "HSA_ENABLE_IPC_MODE_LEGACY": "1",
         "NCCL_PROTO": "Simple",
         "PAITON_FN_A4": "1",
         "PAITON_FN_A4_SAMPLED": "1",

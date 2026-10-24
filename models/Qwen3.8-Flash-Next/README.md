@@ -189,6 +189,8 @@ torch modes `...-20261017-r1`, every native mode `...-20261024-pc-rc3`.
   matrix with 1 and 8 requests and 8,192 output tokens): one warm-up request, three runs on one server, the median run kept.
   Raw outputs: `benchmarks/`; tables: [BENCHMARKS.md](BENCHMARKS.md).
 
+The launcher leaves `HSA_ENABLE_IPC_MODE_LEGACY` unset (ROCr's default IPC path, which also works with the in-tree amdgpu driver); set it in your environment (`HSA_ENABLE_IPC_MODE_LEGACY=1`) to force the legacy path.
+
 ## Files
 `run-flashnext*.sh` (the wrappers), `launch-flashnext.py` (the launcher; also builds the runtime view `<weights>-view` once),
 `modes.json` (environment and engine arguments of every mode), `README.md`, `README-3bit.md`, `README-4bit.md`,
