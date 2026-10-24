@@ -42,7 +42,7 @@ W3.update(hf_repo=COMMON['hf_repo'], hf_revision=COMMON['hf_revision'], default_
 SITE_PACKAGES = '/usr/local/lib/python3.12/dist-packages'
 DRAFTER_ROOT = '/opt/paiton/drafter'   # D1 (17 Oct): drafter files baked into the image (one layer, before the code)
 # verbatim copy of paiton_vllm_plugin/flashnext/zz_paiton_fn_kv_tier.pth (a no-op unless PAITON_FN_KV_TIER=1)
-ENV_OVERRIDES = ('PAITON_FN_ROPE_TRIM', 'PAITON_FN_OUTSIDE_RESERVE_MIB')   # caller's value wins; unset = the mode or executor default
+ENV_OVERRIDES = ('PAITON_FN_ROPE_TRIM', 'PAITON_FN_OUTSIDE_RESERVE_MIB', 'HSA_ENABLE_IPC_MODE_LEGACY')   # caller's value wins; unset = the mode or executor default
 KV_TIER_PTH = ("import os; os.environ.get('PAITON_FN_KV_TIER', '0') == '1' and os.path.exists('/usr/local/lib/python3.12/dist-packages/paiton_vllm_plugin/flashnext/kv_tier_boot.py') "
                "and __import__('runpy').run_path('/usr/local/lib/python3.12/dist-packages/paiton_vllm_plugin/flashnext/kv_tier_boot.py', run_name='paiton_fn_kv_tier_boot')['install']()")
 
