@@ -756,6 +756,7 @@ def test_native_prefix_caching_4bit_mtp(lf, monkeypatch, tmp_path, capsys):
     assert '--mode 4bit-long-cache-mtp-native' in out and env['PAITON_FN_MODE_NAME'] == '4bit-long-cache-mtp-native'
     assert '"num_speculative_tokens": 3' in inner and '--mamba-cache-mode align' in inner and '--max-model-len 262144' in inner
     assert 'native RAM prefix tier: 16 GiB per GPU' in out and '--kv-transfer-config' in inner and '207.3' in out
+    assert '(slots - 14 x sessions) x 2,048 tokens' in out and 'prefilled cold' in out
     assert (env['PAITON_FN_EARLY_TOKENS'], env['PAITON_FN_MALL_PF']) == ('0', 'off')
     out, argv, env, vols, inner = dry(lf, monkeypatch, tmp_path, capsys, '--fn-worker', 'native', '--prefix-caching',
                                       '--native-kv-tier', 'off', mode='4bit')

@@ -841,6 +841,9 @@ def native_apply(a, m, env, engine_args, cache, weights=None):
         print(f'native RAM prefix tier: {a.native_kv_tier:g} GiB per GPU ({2 * a.native_kv_tier:g} GiB of host RAM, {a.native_kv_tier_layout}); '
               + (f'auto {a.native_kv_tier_why}' if getattr(a, 'native_kv_tier_why', None) else 'as requested'))
         if kvt.get('trade'): print(f'native RAM prefix tier: {kvt["trade"]}')
+        if 'mtp' in a.mode:   # each session also keeps 14 recurrent-state slots (7 GDN groups, at its prompt end and one block earlier)
+            print('native RAM prefix tier: holds about (slots - 14 x sessions) x 2,048 tokens of sessions (the server\'s "kv tier: holds '
+                  'about" line prints the slots); a session that does not fit is prefilled cold (correct output, cold speed)')
     native_spec_tokens(a, m, engine_args)
     native_async_scheduling(a, engine_args)
     native_manifest_check(a, env, lib, weights)
