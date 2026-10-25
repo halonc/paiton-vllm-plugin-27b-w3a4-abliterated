@@ -100,7 +100,8 @@ def test_release_name_check(lf, monkeypatch, tmp_path, capsys, rel, ok):
 
 
 ALIASED = [(['--mode', 'decode', '--fn-worker', 'native', '--drafter', 'stock'], 'fnexec/manifest-3bit-stock'),
-           (['--mode', 'decode', '--fn-worker', 'native', '--prefix-caching'], 'fnexec-pc/manifest-3bit-cache-native'),
+           (['--mode', 'decode', '--fn-worker', 'native', '--prefix-caching', '--drafter', 'stock'], 'fnexec-pc/manifest-3bit-long-cache-mtp-native-stock'),
+           (['--mode', '3bit-cache-native'], 'fnexec-pc/manifest-3bit-cache-native'),
            (['--mode', '3bit-long-cache-native'], 'fnexec-pc/manifest-3bit-long-cache-native'),
            (['--mode', '3bit-long-cache-mtp-native', '--drafter', 'stock'], 'fnexec-pc/manifest-3bit-long-cache-mtp-native-stock')]
 

@@ -1549,7 +1549,9 @@
         "manifest_by_drafter": {
           "stock": "manifest-3bit-stock.json"
         },
-        "cache_mode": "3bit-cache-native"
+        "cache_mode": "3bit-long-cache-mtp-native",
+        "cache_mode_small_host": "3bit-cache-native",
+        "cache_mode_note": "--prefix-caching: 3bit-long-cache-mtp-native (MTP on) where the free GTT holds the host tables in GTT pools (gtt_need_gib + gtt_margin_gib, about 120 GiB of RAM at the default GTT limit), as the speculative native worker is measured; else 3bit-cache-native (MTP off, user-pointer pools, from about 64 GiB)"
       }
     },
     "4bit-long-native": {
@@ -4038,7 +4040,7 @@
       "note": "3-bit, native Paiton worker with MTP (K 3) and prefix caching: align mode, 2,048-token blocks, 262,144-token window, KV 4.5 GiB per GPU (560,951 tokens)",
       "host_pools_default": "auto",
       "kv_pool_tokens": 560951,
-      "status": "release candidate 20261024-pc-rc2: named mode (--mode 3bit-long-cache-mtp-native); served gate 24 Oct PASS 19/19 with the RAM tier on 252 GiB; --prefix-caching on --mode decode keeps routing to 3bit-cache-native (MTP off, the small-host path down to 64 GiB)",
+      "status": "release candidate 20261024-pc-rc2: named mode (--mode 3bit-long-cache-mtp-native); served gate 24 Oct PASS 19/19 with the RAM tier on 252 GiB; --prefix-caching on --mode decode --fn-worker native routes here where the free GTT holds the GTT host pools (3bit-cache-native below that)",
       "image_key": "image_4bit_native",
       "native": {
         "worker_cls": "paiton_vllm_plugin.flashnext.fnworker.PaitonFNWorker",

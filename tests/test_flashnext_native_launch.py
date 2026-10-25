@@ -733,8 +733,14 @@ def test_native_kv_tier_auto_from_host(lf, monkeypatch, tmp_path, capsys):
 
 
 def test_native_prefix_caching_routes_to_cache_mode(lf, monkeypatch, tmp_path, capsys):
+    # 2a (25 Oct): 3-bit --prefix-caching keeps MTP (3bit-long-cache-mtp-native) where the free GTT holds the GTT host pools
     out, argv, env, vols, inner = dry(lf, monkeypatch, tmp_path, capsys, '--fn-worker', 'native', '--prefix-caching', mode='decode')
-    assert '--mode 3bit-cache-native' in out and env['PAITON_FN_MODE_NAME'] == '3bit-cache-native'
+    assert '--mode 3bit-long-cache-mtp-native' in out and env['PAITON_FN_MODE_NAME'] == '3bit-long-cache-mtp-native'
+    assert '"num_speculative_tokens": 3' in inner and '--max-model-len 262144' in inner
+    for gtt, extra in ((59.0, ()), (200.0, ('--host-pools', 'userptr'))):   # a smaller host (or user-pointer pools): MTP off, not refused
+        out, argv, env, vols, inner = dry_gtt(lf, monkeypatch, tmp_path, capsys, gtt, 'decode', '--fn-worker', 'native', '--prefix-caching', *extra)
+        assert 'this host gets --mode 3bit-cache-native (speculative decoding off)' in out and 'WARNING: --mode decode' not in out
+        assert env['PAITON_FN_MODE_NAME'] == '3bit-cache-native' and 'num_speculative_tokens' not in inner
     monkeypatch.setattr(lf, 'gtt_limits_gib', lambda gpus: (64.0, 64.0))   # a 128 GB host: 4-bit native refused, the 3-bit mode named
     monkeypatch.setattr(sys, 'argv', ['launch-flashnext.py', '--mode', '4bit-long-native', '--prefix-caching', '--devices', 'GPU-0,GPU-1',
                                       '--cache', str(tmp_path / 'cache')])

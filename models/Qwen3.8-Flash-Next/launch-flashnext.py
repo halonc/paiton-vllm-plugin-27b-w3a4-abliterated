@@ -945,11 +945,14 @@ def main():
             ok, why = (False, f'--ple-host {a.ple_host}') if a.ple_host not in ('auto', 'pinned') else \
                 (False, f'--expert-cold {a.expert_cold}') if cold else pinned_fits(MODES[alias], gp)
             if not ok: return why, 'with the PLE tables pinned'
-        hp = COMMON['host_pools']; need = hp['gtt_need_gib'] + hp['gtt_margin_gib']
-        _, free = (None, None) if MODES[alias].get('expert_tier') else gtt_limits_gib(gp)
-        why = '--host-pools userptr' if a.host_pools == 'userptr' else \
-            f'free GTT {free:.0f} GiB < {need:g} GiB for the host tables' if free is not None and free < need else None
+        why = gtt_pools_short(gp, free_check=not MODES[alias].get('expert_tier'))
         return (why, 'with GTT host pools') if why else None
+
+    def gtt_pools_short(gp, free_check=True):
+        """why the 3-bit host tables cannot go in GTT pools here (--host-pools userptr, or the free GTT is short), else None."""
+        hp = COMMON['host_pools']; need = hp['gtt_need_gib'] + hp['gtt_margin_gib']; _, free = gtt_limits_gib(gp) if free_check else (None, None)
+        return '--host-pools userptr' if a.host_pools == 'userptr' else \
+            f'free GTT {free:.0f} GiB < {need:g} GiB for the host tables' if free is not None and free < need else None
     if native_default:   # the default path: a host or layout the native worker is not measured on keeps the torch worker
         nu = native_unmeasured()
         if nu:
@@ -957,7 +960,7 @@ def main():
             print(f'mode {a.mode}: the torch worker ({nu[0]}; the native worker --mode {alias} is measured {nu[1]} only)')
     elif a.fn_worker == 'native' and alias and not m.get('native'):   # an explicit opt-in: refused with the reason (a dry run warns)
         nu = native_unmeasured()
-        if nu:
+        if nu and not (a.prefix_caching and MODES[alias]['native'].get('cache_mode_small_host')):   # else the small-host cache mode below
             msg = (f'--mode {a.mode} --fn-worker native: {nu[0]}; the native worker --mode {alias} is measured {nu[1]} only '
                    f'(the default torch worker runs on this host: drop --fn-worker native)')
             if a.dry_run: print('WARNING:', msg)
@@ -974,8 +977,14 @@ def main():
     if (a.fn_worker == 'native' or native_default) and not m.get('native') and alias:   # e.g. --mode 4bit = --mode 4bit-mtp-native
         print(f'mode {a.mode}{" --fn-worker native" if a.fn_worker else ""}: --mode {alias} (the native worker in this mode\'s configuration'
               f'{"; the default, --fn-worker torch for the torch worker" if native_default else ""})'); a.mode = alias; m = MODES[a.mode]
-    cm = (m.get('native') or {}).get('cache_mode')
-    if a.prefix_caching and cm:   # native prefix caching: the mode's cache variant (align mode, 2048-token blocks; 4-bit: MTP on, 3-bit: MTP off)
+    cm = (m.get('native') or {}).get('cache_mode'); small = (m.get('native') or {}).get('cache_mode_small_host')
+    if a.prefix_caching and small:   # 3-bit: the MTP cache mode needs the GTT host pools (as the speculative native worker is measured)
+        why = gtt_pools_short((a.devices.split(',') if a.devices else amd_gpus())[:COMMON['tp']])
+        if why:
+            print(f'mode {a.mode} --prefix-caching: {why} (speculative decoding with prefix caching, --mode {cm}, needs the GTT host pools: '
+                  f'about 120 GiB of RAM or more at the default GTT limit); this host gets --mode {small} (speculative decoding off)')
+            cm = small
+    if a.prefix_caching and cm:   # native prefix caching: the mode's cache variant (align mode, 2048-token blocks; MTP on, 3-bit small hosts: MTP off)
         print(f'mode {a.mode} --prefix-caching: --mode {cm} ({MODES[cm]["note"]})'); a.mode = cm; m = MODES[a.mode]
     if a.fn_worker == 'torch' and alias and not m.get('native'):   # --mode 4bit --fn-worker torch: this mode's torch worker (as the r3 release)
         print(f'mode {a.mode} --fn-worker torch: the torch worker (the native default is --mode {alias})'); a.fn_worker = None
