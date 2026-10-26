@@ -786,7 +786,7 @@ def parser():
                           help='prefix reuse with materialized recurrent state: on in --mode long, long-kv4 and '
                                'long-512k; off in 65k')
     advanced.add_argument('--thinking', choices=('on', 'off'),
-                          help='server default for enable_thinking (off in the long modes); individual requests may '
+                          help='server default for enable_thinking (off in the long modes and with the 3-bit weights); individual requests may '
                                'override it')
     advanced.add_argument('--long-prefill-threshold', type=long_prefill_threshold_value, metavar='TOKENS|off',
                           help='cap the prefill tokens a long prompt takes per step so short requests answer while it '
@@ -1374,7 +1374,8 @@ def engine_command(args, weights='mxfp4'):
         replace_value(command, '--mamba-cache-mode', 'align')
         if args.kv_cache == 'kv4' and chat:
             command += ['--prefix-cache-retention-interval', str(KV4_PREFIX_RETENTION_INTERVAL)]
-    thinking = args.thinking if args.thinking is not None else ('off' if chat else None)
+    # 3-bit 65K defaults to thinking off too: its published speed rows are measured that way
+    thinking = args.thinking if args.thinking is not None else ('off' if chat or weights == 'w3a4' else None)
     if thinking is not None:
         command += ['--default-chat-template-kwargs',
                     json.dumps({'enable_thinking': thinking == 'on'})]

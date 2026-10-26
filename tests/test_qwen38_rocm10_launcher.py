@@ -604,6 +604,17 @@ class Rocm10LauncherTests(unittest.TestCase):
         self.assertIn('PAITON_NGRAM_CODRAFT_HOT_MATCH=32', command[:image_index])
         self.assertEqual(command[command.index('PAITON_NGRAM_CODRAFT=1') - 1], '-e')
 
+    def test_w3a4_65k_defaults_to_thinking_off(self):
+        self.assertNotIn('--default-chat-template-kwargs', self.engine(self.command()))
+        w3rot = self.root / 'w3rot thinking'
+        w3rot.mkdir()
+        self.environment['PAITON_W3ROT_DIR'] = str(w3rot)
+        engine = self.engine(self.command())
+        self.assertEqual(json.loads(value(engine, '--default-chat-template-kwargs')), {'enable_thinking': False})
+        engine = self.engine(self.command('--thinking', 'on'))
+        self.assertEqual(json.loads(value(engine, '--default-chat-template-kwargs')), {'enable_thinking': True})
+        self.assertEqual(engine.count('--default-chat-template-kwargs'), 1)
+
     def test_w3a4_weights_follow_the_mounted_directory(self):
         w3rot = self.root / 'w3rot directory'
         w3rot.mkdir()

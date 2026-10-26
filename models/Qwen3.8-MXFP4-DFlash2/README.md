@@ -106,7 +106,8 @@ Already cloned it? Run `git pull` in your checkout. The launcher pins the **5 Oc
 `ghcr.io/eliovp/paiton-vllm-plugin:qwen38-rocm10-vllm029-20261005-r1@sha256:245c71d54f046f89b74dbfbd4c894003754561e55c9d215a8d3ce65364fb0f80`, and Docker pulls it on the first
 start ([what changed](REFERENCE.md#release-notes-5-october-2026); the launcher's own updates since:
 [6 October](REFERENCE.md#launcher-update-6-october-2026-evening),
-[11 October](REFERENCE.md#launcher-update-11-october-2026)). Earlier releases stay runnable:
+[11 October](REFERENCE.md#launcher-update-11-october-2026),
+[26 October](REFERENCE.md#launcher-update-26-october-2026)). Earlier releases stay runnable:
 [run an earlier release](REFERENCE.md#run-an-earlier-release).
 
 <a id="model-weights-and-existing-downloads"></a>
@@ -201,7 +202,8 @@ curl --fail http://127.0.0.1:18982/v1/chat/completions \
   -d '{"model":"Qwen3.8","messages":[{"role":"user","content":"Write a Python function to remove duplicates from a list."}],"max_tokens":256,"stream":true,"chat_template_kwargs":{"enable_thinking":false}}'
 ```
 
-- **Thinking** is on by default in the 65,536-token rows and off in every `--mode long*` row. Each request can set it
+- **Thinking** is off by default with the 3-bit weights (`run-3bit.sh`, every mode) and in every `--mode long*` row;
+  it stays on by default in the MXFP4 65,536-token rows. Each request can set it
   with `"chat_template_kwargs":{"enable_thinking":true}` (or `false`); `--thinking on|off` changes the server
   default. All benchmarks use thinking off.
 - **Long prompts:** send a prompt of hundreds of thousands of tokens from a file (`-d @request.json`) and give the
@@ -327,7 +329,7 @@ starting it.
 | `--long-prefill-threshold TOKENS\|off` | Cap on the prefill tokens a long prompt takes per step, so short requests from other users are answered while it is processed. 2048 by default in `--mode long-kv4` (without `--vision`), off elsewhere; `off` restores the previous read behaviour. |
 | `--lm-head bf16` | 3-bit rows: the bf16 output head instead of the checkpoint's FP8 head (the default on the 5 October image and later); `--mode long-kv4` then holds 569,878 instead of 628,877 tokens, `--mode long` 281,665 instead of 316,325, and the start command is the previous launcher's (in `--mode long-kv4` and `long-512k` together with `--host-pools userptr`). |
 | `--host-pools userptr` | `--mode long-kv4` and `long-512k`: ROCm's default user-pointer memory for the pinned embedding table instead of GTT memory (the default where the GPU's GTT size holds it; [why](REFERENCE.md#launcher-update-11-october-2026)). |
-| `--thinking on` / `--thinking off` | The server default for thinking (on in the 65,536-token rows, off in the `--mode long*` rows). Requests can override it. |
+| `--thinking on` / `--thinking off` | The server default for thinking (off with the 3-bit weights and in the `--mode long*` rows, on in the MXFP4 65,536-token rows). Requests can override it. |
 | `--kv-cache fp8` | `run-3bit.sh` without `--mode`: the FP8 instead of the 4-bit KV cache (250,578 tokens). |
 | `--no-system-memory-weights` | `--mode long-kv4` with nothing pinned, for a host short of free RAM: the embedding table stays on the GPU and the cache holds 451,879 tokens (one full-length request plus short ones); prefix caching stays on. |
 | `--extend-cache [auto\|ram\|disk]` | `--mode long-kv4`: keep prefix-cache blocks that leave the GPU in system RAM or on an NVMe/SSD; see [more cache](#extend-cache). |

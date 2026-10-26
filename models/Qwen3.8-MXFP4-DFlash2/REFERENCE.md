@@ -68,6 +68,18 @@ get the launcher that selects it; `--dry-run` prints the full Docker command.
 - **Earlier images** stay runnable with `--image` and keep their behaviour; the 4 October image remains the
   reference for these outputs. See [Run an earlier release](README.md#run-an-earlier-release).
 
+<a id="launcher-update-26-october-2026"></a>
+
+### Launcher update: 26 October 2026 (launcher only)
+
+`git pull` in your checkout gets a launcher update. The image (5 October r1), the weights and every mode's limits stay
+the same.
+
+- **Thinking off by default with the 3-bit weights.** `run-3bit.sh` now starts every mode, the 65,536-token rows
+  included, with thinking off, the setting all published 3-bit rows were measured with. The MXFP4 65,536-token rows
+  keep thinking on. `--thinking on` restores the previous default; each request can still set
+  `"chat_template_kwargs":{"enable_thinking":true}`.
+
 <a id="launcher-update-11-october-2026"></a>
 
 ### Launcher update: 11 October 2026 (launcher only)
@@ -548,9 +560,9 @@ penalties and sampling settings belong in each client's API requests. Report the
 prompt, settings and server logs when diagnosing loops; a sampling workaround is
 not a general fix.
 
-In the 65K mode, the model's template enables thinking when the client omits that
-setting; the long-context mode and our benchmarks disable it. Use `--thinking off` to
-set the server default, or send
+With the MXFP4 weights in the 65K mode, the model's template enables thinking when the client
+omits that setting; the 3-bit weights (`run-3bit.sh`), the long-context modes and our benchmarks
+disable it. Use `--thinking on|off` to set the server default, or send
 `"chat_template_kwargs":{"enable_thinking":false}` in each request.
 
 **Accuracy at a 257K-token context.** The same three suites we use for every
