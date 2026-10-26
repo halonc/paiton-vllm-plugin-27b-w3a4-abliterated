@@ -3,6 +3,30 @@
 No custom engine was built: regular vLLM with the Paiton plugin and our own kernels. We keep tuning, we keep optimizing.
 Pages: [overview](README.md) · [3-bit](README-3bit.md) · [4-bit](README-4bit.md).
 
+## Next release (local): Paiton for coding agents
+- **3-bit prefix caching keeps speculative decoding.** `--mode decode --fn-worker native --prefix-caching`
+  (`run-flashnext.sh --fn-worker native --prefix-caching`) now serves `--mode 3bit-long-cache-mtp-native`: 262,144-token window
+  (was 98,304), speculative decoding on, RAM prefix tier sized from the host. Same weights. Measured 25 Oct (BetterBench standard;
+  decode / TTFT p50 / prefill @64K / 8 requests / 4 requests): 215.2 / 84 ms / 8,352 / 620.1 / 459.8 with the RAM tier (was
+  101.0 / 73 ms / 8,731 / 403.4 / 279.7 in `3bit-cache-native`), 252.5 / 81 ms / 8,387 / 637.0 / 512.5 with `--native-kv-tier off`.
+  Repeated prompt (cold → hit): 200K 25.84 → 0.68 s, 90K 11.07 → 0.60 s, 32K 3.93 → 0.54 s, 200K from the RAM tier 25.6 → 0.94 s;
+  identical tokens on every hit.
+- **Host check.** Speculative decoding needs the host tables in GTT pools (about 60 GiB of free GTT: 128 GB+ at the default GTT
+  limit, the same as `--mode decode --fn-worker native`). With less, the launcher prints the reason and serves
+  `--mode 3bit-cache-native` (98,304 tokens, speculative decoding off) instead of refusing the host: 64-120 GB hosts keep native
+  prefix caching (tested under a 64 GiB memory limit: 90K 10.51 → 0.32 s).
+- **RAM tier with many sessions taking turns.** The tier holds about (1,089 - 14 x sessions) x 2,048 tokens at 16 GiB per GPU
+  (every session also keeps 14 blocks of recurrent state); the launcher and the server print it. When sessions taking turns need
+  more than that, plain LRU dropped each session just before its turn (11 sessions, 2.05M tokens: 0 of 11 came back from the tier,
+  21-46 s each). The tier now keeps whole sessions and drops the most recently served other one: 9 of 11 resumed from the tier in
+  0.87-1.33 s. Sessions that fit behave as before. `PAITON_FN_KVT_POLICY=lru` (`--native-env`) restores plain LRU.
+- **Decoding next to long prompts (opt-in, unchanged).** `--native-env PAITON_FN_DECODE_INTERLEAVE=1` on the speculative native
+  modes, now including the 3-bit prefix-caching default: a request decoding during a burst of long prompts gets about 2.2x more
+  tokens, at about 5 % less aggregate prompt throughput. Off by default (greedy tokens of concurrent requests can then differ from
+  run to run); with it off the server output is unchanged.
+- **Image 20261026-pc-rc4** (every native mode): the 20261024-pc-rc3 image plus one 49 kB layer with the RAM tier change above;
+  executor and mode files unchanged.
+
 ## Release 20261024 (new 3-bit weights, clearer docs)
 - **New 3-bit weights, the default 3-bit download** (Hugging Face revision `a100b3ae`). Same format, file sizes, kernels and
   speed as before. Against the 16-bit model: GSM8K / HumanEval / MMLU-Pro 97.4 / 94.5 / 83.6 % (16-bit 96.9 / 96.3 / 84.7 %, no
@@ -80,7 +104,9 @@ Pages: [overview](README.md) · [3-bit](README-3bit.md) · [4-bit](README-4bit.m
   0.55-0.63 s with speculative decoding off).
 - Greedy output of a hit equals a cold start when the request is served alone. Next to other running requests greedy tokens can
   differ, with or without a cache hit (batch composition, as in the published native modes); quality is not affected.
-- 16 GiB per GPU of RAM tier holds about 2M tokens of idle sessions; beyond that the least recently used are read again from the start.
+- 16 GiB per GPU of RAM tier holds about (1,089 - 14 x sessions) x 2,048 tokens of idle sessions (1.9M for 11 sessions); sessions
+  beyond it are read again from the start. When sessions taking turns overflow it, the tier keeps whole sessions (9 of 11 resumed
+  from the tier at 2.05M tokens, instead of 0 of 11 with plain LRU).
 - 4-bit cache modes: host tables pinned in GTT only (no `--ple-host pageable|filebacked`, `--expert-cold`); no `--vision` on any
   native mode; the native request-API limits apply ([overview](README.md#request-api-limits)). A 64 GiB host is tight for the 3-bit
   cache modes (about 7 GiB left after the host tables; no RAM tier).

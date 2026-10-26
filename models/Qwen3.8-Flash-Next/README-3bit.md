@@ -73,15 +73,19 @@ Paiton worker, with a KV cache of about 551K tokens (about 112K on the torch def
 
 No image input, request-API limits (no logprobs, structured outputs, penalties, ...) and the host requirement (about 60 GiB of free
 GTT): [overview](README.md#native-worker-opt-in). From 20261024 on, every native mode runs
-`ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261024-pc-rc3` @ `sha256:5bca558833ad230ab1e8db7e6a64f538a7396c44dd660b69716a5aec4e714640` (the 20261017-r1 image plus
+`ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261026-pc-rc4` @ `sha256:328be15c6f1bc3ec99b1b7a436c4a38eeb82ec36d0589b7bbef38f0e465e11cf` (the 20261017-r1 image plus
 the prefix-caching layers; this mode's executor and files are unchanged).
 
-**Prefix caching on the native worker (new in 20261024-pc-rc2): `--mode decode --fn-worker native --prefix-caching`** switches to
-`--mode 3bit-cache-native` (98,304-token window); `--mode 3bit-long-cache-native` has a 262,144-token window. Both: prefix caching
+**Prefix caching on the native worker: `--mode decode --fn-worker native --prefix-caching`** switches to
+`--mode 3bit-long-cache-mtp-native` (262,144-token window, speculative decoding on) where the free GTT holds the host tables
+(about 60 GiB: 128 GB+ at the default GTT limit): 215.2 tok/s single-request decode, 620.1 tok/s at 8 requests, 8,352 tok/s prefill
+at 64K with the RAM tier on (252.5 / 637.0 / 8,387 with `--native-kv-tier off`); a repeated 200K-token prompt 25.84 → 0.68 s, 90K
+11.07 → 0.60 s, 200K from the RAM tier 25.6 → 0.94 s. On a smaller host the launcher says why and serves `--mode 3bit-cache-native`
+(98,304-token window, speculative decoding off) instead; `--mode 3bit-long-cache-native` has a 262,144-token window. These two: prefix caching
 with 2,048-token blocks, speculative decoding off, and a RAM prefix tier sized from the host (`--native-kv-tier auto`, up to 16 GiB
 per GPU). A repeated 90K-token prompt reaches its first token in 0.32 s instead of 10.53 s (32K: 0.27 s instead of 3.70 s; from the
 RAM tier 0.42 s instead of 10.48 s; 200K document in `3bit-long-cache-native`: 0.42 s instead of 24.53 s). Speed without prefix hits
-(BetterBench standard profile): `3bit-cache-native` 101.0 tok/s single-request decode, 403.4 tok/s at 8 requests, 8,731 tok/s prefill at 64K (`--mode decode --fn-worker native` with speculative decoding: 272.5 / 685.4 / 8,392); `3bit-long-cache-native` 100.5 / 401.5 / 8,725. `--mode 3bit-long-cache-mtp-native` (new in 20261024-pc-rc2) keeps speculative decoding on with prefix caching: 262,144-token window, 213.5 tok/s single-request decode, 611.0 tok/s at 8 requests with the RAM tier on (250.0 / 657.7 with `--native-kv-tier off`), 200K-token document 25.81 → 0.68 s; it needs the same host as `--mode decode --fn-worker native`. The other two cache modes start from about 63 GiB of RAM (RAM
+(BetterBench standard profile): `3bit-cache-native` 101.0 tok/s single-request decode, 403.4 tok/s at 8 requests, 8,731 tok/s prefill at 64K (`--mode decode --fn-worker native` with speculative decoding: 272.5 / 685.4 / 8,392); `3bit-long-cache-native` 100.5 / 401.5 / 8,725. These two cache modes start from about 63 GiB of RAM (RAM
 tier off at 64 GiB, 16 GiB per GPU at 128 GiB). Details: [overview](README.md#prefix-caching-on-the-native-worker).
 
 ## Long context
@@ -101,7 +105,7 @@ bash models/Qwen3.8-Flash-Next/run-flashnext-200k.sh       # 200,000-token mode 
 bash models/Qwen3.8-Flash-Next/run-flashnext-exact.sh      # exact-arithmetic prefill, about 7 % slower
 bash models/Qwen3.8-Flash-Next/run-flashnext-cached.sh     # decode mode with prefix caching (agents and coding tools)
 bash models/Qwen3.8-Flash-Next/run-flashnext.sh --fn-worker native   # opt-in: decode mode on the native worker
-bash models/Qwen3.8-Flash-Next/run-flashnext.sh --fn-worker native --prefix-caching   # native prefix caching (3bit-cache-native)
+bash models/Qwen3.8-Flash-Next/run-flashnext.sh --fn-worker native --prefix-caching   # native prefix caching (3bit-long-cache-mtp-native; 3bit-cache-native on 64-120 GB hosts)
 ```
 
 By hand: `python3 models/Qwen3.8-Flash-Next/launch-flashnext.py --mode decode|prefill-long|decode-nopf|prefill-long-nopf [--prefix-caching] [--dry-run]`
@@ -127,10 +131,12 @@ The first start of a mode takes about five to six minutes; wait for `launcher: R
   about 120 GiB of RAM or more), which removes the occasional memory pauses under load and costs ~1 GiB VRAM in decode.
 - Disk: about 116 GB for the weights; the image of the torch modes is 41 GB: `ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261010-r2`
   @ `sha256:ea84a147c6dd44f47a41836ace6b39864fab940095c4c0ba13e82537dd9e2a4b` (pinned in modes.json; the launcher pulls it by digest).
-  `--fn-worker native` runs `ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261024-pc-rc3` @ `sha256:5bca558833ad230ab1e8db7e6a64f538a7396c44dd660b69716a5aec4e714640` instead.
+  `--fn-worker native` runs `ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261026-pc-rc4` @ `sha256:328be15c6f1bc3ec99b1b7a436c4a38eeb82ec36d0589b7bbef38f0e465e11cf` instead.
 - Native worker: about 60 GiB of free GTT for the host tables (about 128 GB of RAM or more at the default GTT limit); without it
-  the launcher stops with the reason. Native prefix caching (`3bit-cache-native`, `3bit-long-cache-native`): tested under 128 GiB
-  (RAM prefix tier 16 GiB per GPU) and 64 GiB memory limits (tier off, hits from VRAM; tight: about 7 GiB left after the host tables).
+  the launcher stops with the reason. Native prefix caching: `--prefix-caching` keeps speculative decoding where that GTT is free
+  (tested as 200 and 128 GiB hosts, RAM prefix tier 16 GiB per GPU, about 89 GiB of host RAM in use with the tier); below it the launcher
+  serves `3bit-cache-native` (tested under 128 GiB and 64 GiB memory limits; at 64 GiB the tier is off, hits from VRAM; tight: about
+  7 GiB left after the host tables).
 - Peak VRAM per card: 30.3 GiB in `decode`, 31.5 GiB in `prefill-long` under 64K-128K prefill load.
 
 ## Known issues and limitations
@@ -139,5 +145,5 @@ The first start of a mode takes about five to six minutes; wait for `launcher: R
   3-bit stops with probability 0.452, the 16-bit model 0.328.
 - 98,304-token window in `decode` (MTP pool, also with `--fn-worker native`), 200,000 in `prefill-long` with MTP off. No image
   input in this release.
-- The native worker is opt-in and has request-API limits ([overview](README.md#request-api-limits)). Native prefix caching runs with
-  speculative decoding off; speculative decoding with prefix caching is in development.
+- The native worker is opt-in and has request-API limits ([overview](README.md#request-api-limits)). On hosts below about 60 GiB
+  of free GTT, native prefix caching runs with speculative decoding off (`3bit-cache-native`).

@@ -52,9 +52,9 @@ be named with `--mode`:
 |---|---|---:|---|---|---|
 | `4bit-long-cache-mtp-native` | `--mode 4bit --fn-worker native --prefix-caching` (also from `4bit-long-native`) | 262,144 | on (MTP 3) | 2.5 GiB per GPU, about 311K tokens | GTT limit about 98 GiB |
 | `4bit-long-cache-native` | `--mode 4bit-long-cache-native` | 262,144 | off | | GTT limit about 98 GiB |
-| `3bit-cache-native` | `--mode decode --fn-worker native --prefix-caching` | 98,304 | off | | from about 63 GiB of RAM |
+| `3bit-cache-native` | `--mode decode --fn-worker native --prefix-caching` when the free GTT is below 60 GiB (64-120 GB hosts), or named | 98,304 | off | | from about 63 GiB of RAM |
 | `3bit-long-cache-native` | `--mode 3bit-long-cache-native` | 262,144 | off | | from about 63 GiB of RAM |
-| `3bit-long-cache-mtp-native` | `--mode 3bit-long-cache-mtp-native` | 262,144 | on (MTP 3) | 4.5 GiB per GPU, about 561K tokens | as 3-bit native |
+| `3bit-long-cache-mtp-native` | `--mode decode --fn-worker native --prefix-caching` with at least 60 GiB of free GTT (128 GB+ at the default GTT limit) | 262,144 | on (MTP 3) | 4.5 GiB per GPU, about 561K tokens | as 3-bit native |
 
 - **Blocks.** 2,048 tokens; a hit resumes on a block boundary and gives the same tokens as a cold start of the same request. With
   speculative decoding a hit resumes one block earlier (the draft layer's last block is recomputed), so a hit reads up to about
@@ -65,12 +65,14 @@ be named with `--mode`:
   `tier per GPU = min(16, floor((available RAM - the mode's resident RAM - start margin - 8 GiB) / 2)) GiB, off below 2 GiB`.
   With the tier off, prefix caching stays on with hits from VRAM only. `--native-kv-tier GIB|off` overrides it. The tier is
   filled at start (10-27 s), so a RAM shortfall shows at start, not under load. Capacity: on `4bit-long-cache-mtp-native` 16 GiB per GPU is
-  1,089 blocks of 2,048 tokens, about 2.2M tokens (7.7 KB per token per GPU, both ranks); a smaller auto-sized tier holds
-  proportionally less. Beyond capacity the least recently used blocks are dropped: those sessions come back cold (correct
-  output, cold speed). Known issue (24 Oct, under investigation): in one run that filled 2.05M tokens of idle sessions (close to
-  capacity) after a long benchmark on the same server, no session came back from the tier (all resumed cold, correct output);
-  1.12M tokens of sessions on a fresh server and four 200K contexts after a full benchmark run both came back from the tier
-  (about 1 s).
+  1,089 blocks of 2,048 tokens (7.7 KB per token per GPU, both ranks), and every session also keeps 14 blocks for its recurrent
+  state (7 state groups, at the prompt end and one block earlier), so the tier holds about (1,089 - 14 x sessions) x 2,048 tokens:
+  2.0M for 8 sessions, 1.9M for 11; a smaller auto-sized tier holds proportionally less. The server prints the numbers on its
+  `kv tier: holds about` line. Sessions that do not fit come back cold (correct output, cold speed). When sessions taking turns
+  need more than the tier holds, plain LRU would drop each session just before its turn (25 Oct, 11 sessions, 2.05M tokens:
+  0 of 11 from the tier); the tier then keeps whole sessions and drops the most recently served other session instead: 9 of 11
+  resumed from the tier at 0.87-1.33 s (cold 21-46 s), the oldest and the last one cold. Four 200K contexts re-hit at about 1 s
+  as before.
 - **Tier trade on the speculative cache modes.** With the tier on, the executor runs without early token return and without the
   MALL prefetch (both share the side stream the tier copies on); the launcher switches them and prints the trade. 4-bit:
   206.9 tok/s single-request decode with the tier (24 Oct release run), 232.6 with `--native-kv-tier off` (24 Oct, rc2 gate run:

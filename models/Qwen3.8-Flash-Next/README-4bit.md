@@ -71,8 +71,8 @@ Measured 17 Oct. Re-measured on 24 Oct with the release image (default `--kv-pro
 
 It needs a GTT limit of at least about 98 GiB (about 196 GB of RAM at the default limit); smaller hosts keep the torch default and
 its 128 GB / 96 GB / 64 GB layouts. No `--vision`, request-API limits (no logprobs, structured outputs, penalties, ...):
-[overview](README.md#native-worker-opt-in). Image (every native mode): `ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261024-pc-rc3`
-@ `sha256:5bca558833ad230ab1e8db7e6a64f538a7396c44dd660b69716a5aec4e714640`.
+[overview](README.md#native-worker-opt-in). Image (every native mode): `ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261026-pc-rc4`
+@ `sha256:328be15c6f1bc3ec99b1b7a436c4a38eeb82ec36d0589b7bbef38f0e465e11cf`.
 
 **Prefix caching on the native worker (new in 20261024-pc-rc2): `--mode 4bit --fn-worker native --prefix-caching`** switches to
 `--mode 4bit-long-cache-mtp-native`: 262,144-token window, prefix caching with 2,048-token blocks, speculative decoding on (MTP depth
@@ -178,7 +178,7 @@ The launcher picks the memory layout from the host's RAM and the GPU's GTT limit
   Raising the GTT limit (`amdgpu.gttsize`, `ttm.pages_limit`) is a system setting the host's administrator may choose; the launcher
   never changes it.
 - Disk: about 133 GB for the weights (plus 49 GiB on 96 GB and 64 GB hosts, above). Image of the torch 4-bit modes (the native
-  modes run `...-20261024-pc-rc3`, above):
+  modes run `...-20261026-pc-rc4`, above):
   `ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261017-r1` @ `sha256:b801bafd3f4cbc04b99153180514845894f98554f49fccdbfe0d6344b47034d9` (digest pinned in modes.json; the launcher pulls it by digest).
 - Peak VRAM per card in `--mode 4bit`: 30.6 GiB under a stream of long prompts, 30.0 GiB in the decode benchmark
   (allocator cap 0.925).

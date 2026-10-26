@@ -12,7 +12,8 @@ plugin and our own kernels.
 | The fastest chat and code | `bash models/Qwen3.8-Flash-Next/run-flashnext.sh --fn-worker native` | 3-bit, 258.7 tok/s for one request, 687.5 tok/s for 8, 98K-token window | 128 GB+ |
 | The most accurate answers | `bash models/Qwen3.8-Flash-Next/run-flashnext-4bit.sh --fn-worker native` | 4-bit, 245.3 tok/s for one request, 566.7 tok/s for 8, 98K-token window | 196 GB+ |
 | Agents and coding tools (long conversations resent every turn) | `bash models/Qwen3.8-Flash-Next/run-flashnext-4bit.sh --fn-worker native --prefix-caching` | 4-bit, 262K-token window; a repeated 200K-token prompt starts answering in 0.85 s instead of 33.62 s; 206.9 tok/s for one request | 196 GB+ |
-| Agents and coding tools on a smaller host | `bash models/Qwen3.8-Flash-Next/run-flashnext.sh --fn-worker native --prefix-caching` | 3-bit, 98K-token window; a repeated 90K-token prompt in 0.32 s instead of 10.53 s; 101 tok/s for one request (no speculative decoding) | 64 GB+ |
+| Agents and coding tools on the 3-bit | `bash models/Qwen3.8-Flash-Next/run-flashnext.sh --fn-worker native --prefix-caching` | 3-bit, 262K-token window with speculative decoding; a repeated 200K-token prompt in 0.68 s instead of 25.84 s; 215.2 tok/s for one request | 128 GB+ |
+| Agents and coding tools on a 64-120 GB host | the same command | the launcher switches to the 3-bit without speculative decoding, 98K-token window; a repeated 90K-token prompt in 0.32 s instead of 10.51 s; 101 tok/s for one request | 64 GB+ |
 | The 4-bit on a 64-128 GB host | `bash models/Qwen3.8-Flash-Next/run-flashnext-4bit.sh` | 4-bit on the torch worker, about 190 tok/s for one request; the launcher picks the memory layout | 64 GB+ ([layouts](README-4bit.md#system-ram)) |
 | Image input | `bash models/Qwen3.8-Flash-Next/run-flashnext-4bit.sh --vision` | 4-bit with images up to 4K (torch worker) | as above |
 | 200K-token prompts on the 3-bit | `bash models/Qwen3.8-Flash-Next/run-flashnext-200k.sh` | 3-bit, 200,000-token window, speculative decoding off, about 100 tok/s | 128 GB+ |
@@ -31,7 +32,8 @@ weighted over eight prompt categories. Native rows: 24 Oct 2026, one run each.
 | 3-bit `--fn-worker native` | **258.7 tok/s** | **687.5 tok/s** | 8,433 tok/s | 56 ms | 98,304 |
 | 4-bit `--fn-worker native` | **245.3 tok/s** | **566.7 tok/s** | 7,788 tok/s | 65 ms | 98,304 |
 | 4-bit `--fn-worker native --prefix-caching` | 206.9 tok/s | 477.6 tok/s | 7,226 tok/s | 107 ms | 262,144 |
-| 3-bit `--fn-worker native --prefix-caching` | 101.0 tok/s | 403.4 tok/s | 8,731 tok/s | 73 ms | 98,304 |
+| 3-bit `--fn-worker native --prefix-caching` | 215.2 tok/s | 620.1 tok/s | 8,352 tok/s | 84 ms | 262,144 |
+| 3-bit `--fn-worker native --prefix-caching`, 64-120 GB host | 101.0 tok/s | 403.4 tok/s | 8,731 tok/s | 73 ms | 98,304 |
 | 3-bit default (torch worker) | 216.3 tok/s | 565.1 tok/s | 8,161 tok/s ¹ | 117 ms | 98,304 |
 | 4-bit default (torch worker) | 189.8 tok/s | 420.7 tok/s | 6,991 tok/s ¹ | 121 ms | 98,304 |
 
@@ -87,7 +89,8 @@ tables and intervals: the model cards ([W3A8](https://huggingface.co/EliovpAI/Qw
 | Mode | Host RAM |
 |---|---|
 | 3-bit `--fn-worker native` (also `--mode 3bit-long-cache-mtp-native`) | about 60 GiB of free GTT: 128 GB+ at the default GTT limit (half the RAM) |
-| 3-bit `--fn-worker native --prefix-caching` (`3bit-cache-native`, `3bit-long-cache-native`) | from about 64 GB (RAM prefix tier from about 79 GiB) |
+| 3-bit `--fn-worker native --prefix-caching` | about 60 GiB of free GTT (128 GB+ at the default GTT limit) for speculative decoding (`3bit-long-cache-mtp-native`); below that the launcher says why and serves `3bit-cache-native` (speculative decoding off) from about 64 GB |
+| `--mode 3bit-cache-native`, `3bit-long-cache-native` | from about 64 GB (RAM prefix tier from about 79 GiB) |
 | 4-bit `--fn-worker native`, with or without `--prefix-caching` | a GTT limit of about 98 GiB: 196 GB+ at the default GTT limit; smaller hosts are refused and pointed at the modes that fit |
 | 3-bit torch default | 128 GB+ |
 | 4-bit torch default | 256 GB as benchmarked; 128, 96 and 64 GB with automatic layouts ([4-bit page](README-4bit.md#system-ram)) |
@@ -116,8 +119,8 @@ curl --fail http://127.0.0.1:18982/v1/chat/completions \
 ## Native worker (opt-in)
 `--fn-worker native` runs the model in the native Paiton worker instead of the torch worker; vLLM keeps the API server, the
 scheduler and the KV cache manager. It is the fastest path; every native mode runs one image:
-`ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261024-pc-rc3` @
-`sha256:5bca558833ad230ab1e8db7e6a64f538a7396c44dd660b69716a5aec4e714640` (pinned; the launcher pulls it by digest). No
+`ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261026-pc-rc4` @
+`sha256:328be15c6f1bc3ec99b1b7a436c4a38eeb82ec36d0589b7bbef38f0e465e11cf` (pinned; the launcher pulls it by digest). No
 automatic fallback: on a host that does not fit, the launcher stops and says why. No image input (`--vision` is torch-only).
 KV profiles, drafters, repeatability and the opt-in decode interleave: [BENCHMARKS.md](BENCHMARKS.md#native-worker-details).
 
@@ -132,19 +135,23 @@ decoding, on both workers. We are working on these limits for a next release.
 ### Prefix caching on the native worker
 An agent or coding tool resends the whole conversation every turn; with `--prefix-caching` the shared part is reused instead of
 read again, with the same tokens as a cold start. Blocks evicted from VRAM go to a RAM prefix tier sized from the host (up to
-16 GiB per GPU: about 2.2M tokens on the 4-bit) and are loaded back on a hit. Beyond that capacity the least recently used
-sessions are dropped and come back cold (correct output, cold speed). Known issue on the 4-bit, under investigation: near that
-capacity, sessions can come back cold even when they should fit ([details](BENCHMARKS.md#native-prefix-caching-details)).
+16 GiB per GPU on the 4-bit: 1,089 blocks of 2,048 tokens, of which every session also keeps 14 for its recurrent state, so
+about (1,089 - 14 x sessions) x 2,048 tokens: 1.9M for 11 sessions). Sessions that do not fit come back cold (correct output,
+cold speed). When sessions taking turns need more than that, the tier keeps whole sessions and drops the most recently served
+other one: in our 11-session test (2.05M tokens) 9 of 11 resumed from the tier in about 1 s
+([details](BENCHMARKS.md#native-prefix-caching-details)).
 
 | Repeated prompt, time to first token (cold → hit) | 4-bit `--fn-worker native --prefix-caching` | 3-bit `--fn-worker native --prefix-caching` |
 |---|---:|---:|
-| 32K tokens | 5.25 → 0.69 s | 3.70 → 0.27 s |
-| 90K tokens | 14.68 → 0.78 s | 10.53 → 0.32 s |
-| 200K-token prompt | 33.62 → 0.85 s | – (98K window; `--mode 3bit-long-cache-native`: 24.53 → 0.42 s) |
-| Idle session resumed from the RAM tier | 145K-200K: 0.98-1.17 s (cold 21-30 s) | 90K: 10.48 → 0.42 s |
+| 32K tokens | 5.25 → 0.69 s | 3.93 → 0.54 s |
+| 90K tokens | 14.68 → 0.78 s | 11.07 → 0.60 s |
+| 200K-token prompt | 33.62 → 0.85 s | 25.84 → 0.68 s |
+| Idle session resumed from the RAM tier | 145K-200K: 0.98-1.17 s (cold 21-30 s) | 200K: 0.88-0.94 s (cold 25.6-25.8 s) |
+
+On a 64-120 GB host the 3-bit runs without speculative decoding (98K window): 32K 3.69 → 0.27 s, 90K 10.51 → 0.32 s.
 
 On the 4-bit, `--native-kv-tier off` is faster for single requests (232.6 instead of 206.9 tok/s, 24 Oct) when your sessions fit in
-VRAM (about 311K tokens). Modes, tier sizing, tested host sizes and limits:
+VRAM (about 311K tokens); on the 3-bit, 252.5 instead of 215.2 tok/s (about 561K tokens in VRAM). Modes, tier sizing, tested host sizes and limits:
 [BENCHMARKS.md](BENCHMARKS.md#native-prefix-caching-details).
 
 ### Host requirements
@@ -169,7 +176,7 @@ checks and the RAM tier as on a host with GIB of RAM.
 `--expert-cold auto|off|SHARE`, `--expert-cold-dir DIR`, `--port`, `--host ADDRESS`, `--api-key KEY`, `--name`, `--weights DIR`,
 `--cache DIR`, `--image REF`, `--devices GPU-...,GPU-...`, `--served-model-name`, `--detach`, `--settle-s`, `--keep-page-cache`,
 `--dry-run`. The launcher picks the image per mode: the 3-bit torch modes run the 3-bit image (`...-20261010-r2`), the 4-bit
-torch modes `...-20261017-r1`, every native mode `...-20261024-pc-rc3`.
+torch modes `...-20261017-r1`, every native mode `...-20261026-pc-rc4`.
 
 <a id="how-the-numbers-were-taken"></a>
 
