@@ -61,7 +61,7 @@ def test_native_wiring(lf, monkeypatch, tmp_path, capsys):
     assert env['PAITON_FN_MODE_NAME'] == '4bit-native' and env['PAITON_FN_HOST_LAYOUT'] == 'pinned'
     assert any(v.endswith(':/usr/local/lib/python3.12/dist-packages/zzzz_paiton_fn_native_guard.pth:ro') for v in vols)
     assert '--worker-cls paiton_vllm_plugin.flashnext.fnworker.PaitonFNWorker' in inner and '--enforce-eager' in inner
-    assert '--speculative-config' not in inner and 'ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261024-pc-rc3@sha256:5bca558833ad230ab1e8db7e6a64f538a7396c44dd660b69716a5aec4e714640' in argv
+    assert '--speculative-config' not in inner and 'ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261026-pc-rc4@sha256:328be15c6f1bc3ec99b1b7a436c4a38eeb82ec36d0589b7bbef38f0e465e11cf' in argv
 
 
 def test_budget_default_and_reserve_passthrough(lf, monkeypatch, tmp_path, capsys):
@@ -540,7 +540,7 @@ def test_release_native_default(lf, monkeypatch, tmp_path, capsys):
     assert env['PAITON_FN_NATIVE'] == '1' and env['PAITON_FN_MODE_NAME'] == '4bit' and 'PAITON_FN_MANIFEST' not in env
     assert env['PAITON_FN_PF_RS_LL'] == '1' and env['PAITON_TP_COLLECTIVE_PATH'] == '/opt/paiton/runtime/tp-collective-rsll/tp_collective.so'
     assert env['PAITON_FN_ADMIT'] == 'finish' and env['PAITON_FN_FNEXEC_LIB'] == '/opt/paiton/runtime/fnexec/libpaiton_fnexec.so'
-    assert not any(v.endswith(':/opt/paiton/runtime/fnexec:ro') for v in vols) and 'ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261024-pc-rc3@sha256:5bca558833ad230ab1e8db7e6a64f538a7396c44dd660b69716a5aec4e714640' in argv
+    assert not any(v.endswith(':/opt/paiton/runtime/fnexec:ro') for v in vols) and 'ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261026-pc-rc4@sha256:328be15c6f1bc3ec99b1b7a436c4a38eeb82ec36d0589b7bbef38f0e465e11cf' in argv
     # D1 switch: the stock drafter selects the image's stock manifest
     out, argv, env, vols, inner = native_default_env(lf, monkeypatch, tmp_path, capsys, '4bit', '--drafter', 'stock')
     assert env['PAITON_FN_MANIFEST'] == '/opt/paiton/runtime/fnexec/manifest-4bit-stock.json'

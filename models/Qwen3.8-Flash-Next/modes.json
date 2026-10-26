@@ -229,8 +229,8 @@
       "note": "launcher --expert-cold (auto on hosts where even the file-backed layout does not fit MemAvailable): the coldest share of each decoder layer's experts (by the routing counts) leaves the pinned host pool for one file per GPU (<weights>-expert-cold, written at the first start, reused after); before each MoE launch a gate kernel reads the routed ones into a pinned bounce buffer. Same output, slower. Needs an image with the cold-expert runtime (images). Measured 15 Oct on the r4 image under a 60 GiB memory limit (a 64 GB host), with the reuse cache (384 slots per GPU) and the file-backed PLE layout: cold share 0.2 keeps about 51 GiB of host RAM in use while serving (the memory limit fills with page cache from the file-backed files, as designed), output identical to the pinned layout; --mode 4bit about 85 tok/s single-stream and 181 at 8 requests, --mode 4bit-long about 89 / 237 with needles at 131K tokens 5/5. Share 0.1 (about 55 GiB, measured 14 Oct without the reuse cache) is picked only where it fits (about 72 GB and up)."
     },
     "image_4bit_native": {
-      "tag": "ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261024-pc-rc3",
-      "digest": "sha256:5bca558833ad230ab1e8db7e6a64f538a7396c44dd660b69716a5aec4e714640",
+      "tag": "ghcr.io/eliovp/paiton-vllm-plugin:qwen38-flashnext-rocm10-vllm029-20261026-pc-rc4",
+      "digest": "sha256:328be15c6f1bc3ec99b1b7a436c4a38eeb82ec36d0589b7bbef38f0e465e11cf",
       "fnexec_manifest_alias": {
         "8a5c91161dacb4690328c6fd64d1cdc8b1986f8fcc4ee3e70293c919b9de71ad": {
           "suffix": "w3a8-71faf406",
@@ -238,7 +238,7 @@
         }
       },
       "fnexec_manifest_alias_note": "checkpoint manifest.json sha256 -> the image's executor manifests for that checkpoint (<file stem>-<suffix>.json): the W3A8 71faf406 weights are a strict drop-in for B3h (identical tensor index and sizes), so rc3 carries the B3h plans with container.manifest_sha256 of the new manifest; the B3h files stay for 829b089b",
-      "note": "4-bit + 3-bit native release image 20261024-pc-rc3 (every native mode): rc2 (c5c3b398) plus one layer with the four 3-bit executor manifests for the W3A8 71faf406 weights. rc2: the 20261023-pc-rc1 image plus one layer: /opt/paiton/runtime/fnexec-pc gains the 262K MTP prefix-cache mode files, the native glue gains the decode interleave (fnadmit, opt-in) and the RAM prefix tier fix for MTP (kv_overlays); every other mode is unchanged",
+      "note": "4-bit + 3-bit native release image 20261026-pc-rc4 (every native mode): the 20261024-pc-rc3 image (5bca5588) plus one glue layer, fnkvt.py + kv_policy.py: the RAM prefix tier keeps whole sessions while sessions taking turns overflow it (PAITON_FN_KVT_POLICY=lru = stock LRU). rc3: rc2 (c5c3b398) plus one layer with the four 3-bit executor manifests for the W3A8 71faf406 weights. rc2: the 20261023-pc-rc1 image plus one layer: /opt/paiton/runtime/fnexec-pc gains the 262K MTP prefix-cache mode files, the native glue gains the decode interleave (fnadmit, opt-in) and the RAM prefix tier fix for MTP (kv_overlays); every other mode is unchanged",
       "fnexec_in_image": true,
       "fnexec_modes": [
         "4bit",
