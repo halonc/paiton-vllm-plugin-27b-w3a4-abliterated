@@ -1,0 +1,19 @@
+# Public default image for AMD Instinct MI350P (CDNA4): stock vLLM 0.32 + AITER serving AMD's Quark MXFP4 checkpoint of
+# Qwen3.8-Flash-Next. Nothing proprietary: no Paiton engine, no Paiton weights. The model is downloaded at start.
+FROM vllm/vllm-openai-rocm:v0.32.0
+
+ARG PLUGIN_REVISION=unknown
+LABEL org.opencontainers.image.title="Paiton public default for MI350P (stock vLLM + AITER, AMD MXFP4)" \
+      org.opencontainers.image.description="Unoptimized default: stock vLLM 0.32 + AITER with amd/Qwen3.8-Flash-Next-Quark-MXFP4-PLEFP8" \
+      org.opencontainers.image.source="https://github.com/Eliovp-BV/paiton-vllm-plugin" \
+      org.opencontainers.image.revision="${PLUGIN_REVISION}" \
+      org.opencontainers.image.version="cdna4-mxfp4-default-20261028" \
+      dev.paiton.gpu.arch="gfx950" \
+      dev.paiton.model="amd/Qwen3.8-Flash-Next-Quark-MXFP4-PLEFP8"
+
+ENV VLLM_ROCM_USE_AITER=1
+COPY scripts/cdna4/entrypoint-default.sh /usr/local/bin/paiton-default-entrypoint
+ENTRYPOINT ["/usr/local/bin/paiton-default-entrypoint"]
+CMD ["vllm", "serve", "amd/Qwen3.8-Flash-Next-Quark-MXFP4-PLEFP8", "--served-model-name", "qwen3.8-flash-next", \
+     "--host", "0.0.0.0", "--port", "8000", "--max-model-len", "262144", "--max-num-seqs", "64", \
+     "--gpu-memory-utilization", "0.92", "--hf-overrides", "{\"text_config\":{\"ple_embedding_dtype\":\"float8_e4m3fn\"}}"]

@@ -155,6 +155,27 @@ speaker labels and timestamped notes from recordings. Review generated notes
 against the recording. Live Teams capture and Studio integration are unsupported.
 [Benchmarks and limits](models/Meeting/BENCHMARKS.md).
 
+<a id="amd-instinct-mi350p"></a>
+
+### AMD Instinct MI350P (CDNA4): public default
+
+A one-command default for **Qwen3.8 Flash Next on one AMD Instinct MI350P**: stock vLLM 0.32 with AITER, serving
+AMD's [Quark MXFP4 checkpoint](https://huggingface.co/amd/Qwen3.8-Flash-Next-Quark-MXFP4-PLEFP8). It is
+unoptimized and contains nothing proprietary. The optimized Paiton engine for this GPU is proprietary and not part of
+this repository; see https://eliovp.com/blog/paiton-qwen38-flash-next-amd-instinct-mi350p for its results.
+
+```bash
+git clone --depth 1 https://github.com/Eliovp-BV/paiton-vllm-plugin.git
+cd paiton-vllm-plugin
+PAITON_BIND=127.0.0.1 scripts/cdna4/launch-mi350p.sh
+```
+
+The first start downloads the model (about 125 GB) into `~/.cache/huggingface`. When the server is ready, it answers
+on `http://127.0.0.1:8000/v1` with model name `qwen3.8-flash-next`, a 262,144-token context and up to 64 concurrent
+requests. `scripts/cdna4/launch-mi350p.sh --help` lists the settings (port, context, request limit, local model
+folder, API key). Our published MI350P numbers use a 450 W GPU power limit (default 600 W); the script does not
+change it. To build the image yourself: `docker build -f Dockerfile.cdna4-default -t paiton-mi350p-default .`
+
 <a id="run-in-your-vllm-environment"></a><a id="native-cli"></a><a id="native-serving-presets"></a><a id="existing-commands-remain-supported"></a>
 
 ## Use your own vLLM environment
