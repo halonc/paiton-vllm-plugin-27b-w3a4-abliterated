@@ -46,7 +46,7 @@ python3 scripts/build_gptq2.py --src /path/to/abliterated-bf16 --out ./out \
 python3 scripts/gen_manifest.py ./out /path/to/official/w3rot-manifest.json /path/to/abliterated-bf16
 ```
 
-模型在盘上的情况下，构建约 10 分钟。权重发布在 Hugging Face（见 release）。
+模型在盘上的情况下，构建约 10 分钟。权重：[halonc/Qwen3.8-27B-W3Rot-INT3-Paiton-RDNA4-abliterated](https://huggingface.co/halonc/Qwen3.8-27B-W3Rot-INT3-Paiton-RDNA4-abliterated)。
 
 ## 局限
 
