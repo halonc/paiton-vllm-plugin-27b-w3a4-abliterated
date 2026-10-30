@@ -1,3 +1,5 @@
+> **Fork note** — this fork adds [`models/Qwen3.8-27B-W3A4-ABLITERATED/`](models/Qwen3.8-27B-W3A4-ABLITERATED/README.md): an abliterated Qwen3.8-27B quantized to the paiton-w3rot 3-bit format with GPTQ calibration, matching the official 3-bit weights on MMLU-Pro. [中文说明](models/Qwen3.8-27B-W3A4-ABLITERATED/README.zh.md).
+
 # Paiton
 
 **Local AI, optimized for AMD Radeon.**
